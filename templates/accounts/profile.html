@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Profile — ViralGen AI{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Manage your account settings{% endblock %}
+
+{% block content %}
+<div class="row g-4" style="max-width:600px">
+  <div class="col-12">
+    <div class="glass-card p-4">
+      <h5 style="font-weight:700;margin-bottom:20px;color:#f0f4ff"><i class="bi bi-person-circle me-2" style="color:#4f8eff"></i>Account Settings</h5>
+      <form method="post" action="{% url 'profile' %}">
+        {% csrf_token %}
+
+        <div style="margin-bottom:20px">
+          <label class="form-label-dark">Display Name</label>
+          <input type="text" name="name" class="form-control-dark" value="{{ user.name }}" placeholder="Your name">
+        </div>
+
+        <div style="margin-bottom:20px">
+          <label class="form-label-dark">Email Address</label>
+          <input type="email" class="form-control-dark" value="{{ user.email }}" disabled style="opacity:0.6">
+          <div style="font-size:12px;color:rgba(240,244,255,0.35);margin-top:6px"><i class="bi bi-lock-fill me-1"></i>Email cannot be changed</div>
+        </div>
+
+        <div style="margin-bottom:24px">
+          <label class="form-label-dark">Processing Mode</label>
+          <p style="font-size:12px;color:rgba(240,244,255,0.4);margin-bottom:10px">Choose your experience level — affects the complexity of tools shown.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <label style="cursor:pointer">
+              <input type="radio" name="preference" value="beginner" {% if user.preference == 'beginner' %}checked{% endif %} style="display:none" class="mode-radio">
+              <div class="mode-card {% if user.preference == 'beginner' %}active{% endif %}" style="background:rgba(255,255,255,0.04);border:2px solid {% if user.preference == 'beginner' %}rgba(79,142,255,0.5){% else %}rgba(255,255,255,0.08){% endif %};border-radius:12px;padding:16px;text-align:center;transition:all 0.2s">
+                <div style="font-size:24px;margin-bottom:8px">🎓</div>
+                <div style="font-weight:700;font-size:14px">Beginner</div>
+                <div style="font-size:11px;color:rgba(240,244,255,0.4);margin-top:4px">Simplified tools & guided controls</div>
+              </div>
+            </label>
+            <label style="cursor:pointer">
+              <input type="radio" name="preference" value="professional" {% if user.preference == 'professional' %}checked{% endif %} style="display:none" class="mode-radio">
+              <div class="mode-card {% if user.preference == 'professional' %}active{% endif %}" style="background:rgba(255,255,255,0.04);border:2px solid {% if user.preference == 'professional' %}rgba(139,92,246,0.5){% else %}rgba(255,255,255,0.08){% endif %};border-radius:12px;padding:16px;text-align:center;transition:all 0.2s">
+                <div style="font-size:24px;margin-bottom:8px">⚡</div>
+                <div style="font-weight:700;font-size:14px">Professional</div>
+                <div style="font-size:11px;color:rgba(240,244,255,0.4);margin-top:4px">All tools unlocked with full controls</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-gradient" style="width:100%;padding:12px">
+          <i class="bi bi-check-circle-fill me-2"></i>Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.mode-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.mode-card').forEach(c => {
+        c.style.borderColor = 'rgba(255,255,255,0.08)';
+        c.style.background = 'rgba(255,255,255,0.04)';
+      });
+      const card = radio.nextElementSibling;
+      const color = radio.value === 'professional' ? 'rgba(139,92,246,0.5)' : 'rgba(79,142,255,0.5)';
+      card.style.borderColor = color;
+      card.style.background = radio.value === 'professional' ? 'rgba(139,92,246,0.08)' : 'rgba(79,142,255,0.08)';
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ViralGen AI — Digital Image Processing Lab{% endblock %}</title>
+  <meta name="description" content="ViralGen AI — Professional Digital Image Processing platform with 16+ DIP tools, AI enhancement, and analytics.">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+      --bg-primary: #070b14;
+      --bg-secondary: #0d1421;
+      --bg-card: rgba(255,255,255,0.04);
+      --accent-blue: #4f8eff;
+      --accent-purple: #8b5cf6;
+      --accent-cyan: #06d6e3;
+      --accent-green: #10dba0;
+      --accent-orange: #f97316;
+      --glass-border: rgba(255,255,255,0.08);
+      --text-primary: #f0f4ff;
+      --text-secondary: #8899bb;
+      --gradient-brand: linear-gradient(135deg, #4f8eff 0%, #8b5cf6 50%, #06d6e3 100%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated gradient background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 20% 20%, rgba(79,142,255,0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 50% 10%, rgba(6,214,227,0.04) 0%, transparent 40%);
+      z-index: -1;
+      animation: bgShift 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgShift {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(2%, 2%) rotate(1deg); }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0;
+      width: 240px;
+      height: 100vh;
+      background: rgba(10, 15, 28, 0.95);
+      border-right: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px 24px;
+      border-bottom: 1px solid var(--glass-border);
+      margin-bottom: 24px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--gradient-brand);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .nav-item-custom {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      margin-bottom: 4px;
+    }
+
+    .nav-item-custom:hover, .nav-item-custom.active {
+      background: rgba(79,142,255,0.12);
+      color: var(--accent-blue);
+    }
+
+    .nav-item-custom i { font-size: 16px; min-width: 20px; }
+
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(136,153,187,0.5);
+      padding: 16px 14px 6px;
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 240px;
+      min-height: 100vh;
+      padding: 24px 32px;
+    }
+
+    /* Glass cards */
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .glass-card:hover { border-color: rgba(79,142,255,0.2); }
+
+    /* Gradient button */
+    .btn-gradient {
+      background: var(--gradient-brand);
+      border: none;
+      color: white;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+      font-size: 14px;
+    }
+
+    .btn-gradient:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-outline-glow {
+      background: transparent;
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      border-radius: 10px;
+      padding: 9px 22px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-outline-glow:hover {
+      background: rgba(79,142,255,0.1);
+      box-shadow: 0 0 16px rgba(79,142,255,0.25);
+    }
+
+    /* Stats cards */
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      border-color: rgba(79,142,255,0.3);
+      transform: translateY(-2px);
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 800;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .topbar h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      padding: 6px 14px 6px 6px;
+    }
+
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: var(--gradient-brand);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    /* Form elements */
+    .form-control-dark {
+      background: rgba(255,255,255,0.05) !important;
+      border: 1px solid var(--glass-border) !important;
+      color: var(--text-primary) !important;
+      border-radius: 10px !important;
+      padding: 10px 14px !important;
+      font-size: 14px !important;
+      transition: border-color 0.2s !important;
+    }
+
+    .form-control-dark:focus {
+      outline: none !important;
+      border-color: var(--accent-blue) !important;
+      box-shadow: 0 0 0 3px rgba(79,142,255,0.1) !important;
+      background: rgba(255,255,255,0.07) !important;
+    }
+
+    .form-control-dark option { background: #0d1421; color: #f0f4ff; }
+
+    select.form-control-dark { cursor: pointer; }
+
+    /* Labels */
+    .form-label-dark {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    /* Toggle chip */
+    .feature-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .feature-toggle.active {
+      background: rgba(79,142,255,0.12);
+      border-color: rgba(79,142,255,0.4);
+      color: var(--accent-blue);
+    }
+
+    /* Progress */
+    .progress-slim {
+      height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--gradient-brand);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* Badge */
+    .badge-glow {
+      background: rgba(79,142,255,0.15);
+      color: var(--accent-blue);
+      border: 1px solid rgba(79,142,255,0.3);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* Toast */
+    .toast-custom {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 9999;
+      min-width: 280px;
+      background: rgba(13, 20, 33, 0.95);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Color chip */
+    .color-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .color-dot {
+      width: 16px; height: 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    /* Quality score ring */
+    .quality-ring {
+      width: 90px; height: 90px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quality-ring svg { transform: rotate(-90deg); }
+    .quality-ring-text {
+      position: absolute;
+      text-align: center;
+    }
+
+    /* Drag drop zone */
+    .drop-zone {
+      border: 2px dashed rgba(79,142,255,0.3);
+      border-radius: 16px;
+      background: rgba(79,142,255,0.03);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .drop-zone.dragover, .drop-zone:hover {
+      border-color: var(--accent-blue);
+      background: rgba(79,142,255,0.07);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; padding: 16px; }
+    }
+
+    /* Animation utilities */
+    .fade-in { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Table */
+    .table-dark-custom { color: var(--text-primary); }
+    .table-dark-custom th {
+      color: var(--text-secondary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--glass-border);
+      padding: 10px 16px;
+    }
+
+    .table-dark-custom td {
+      font-size: 13.5px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+
+    /* Score bar */
+    .score-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+      min-width: 60px;
+    }
+
+    .score-fill-success { background: var(--accent-green); }
+    .score-fill-info { background: var(--accent-blue); }
+    .score-fill-warning { background: var(--accent-orange); }
+    .score-fill-danger { background: #ef4444; }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if request.session.user_id %}
+<!-- Sidebar Navigation -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">ViralGen AI</div>
+      <div style="font-size:10px;color:var(--text-secondary)">DIP Lab</div>
+    </div>
+  </div>
+
+  <!-- Mode badge -->
+  <div style="margin-bottom:16px;padding:0 4px">
+    <div style="background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:8px 12px;font-size:12px;display:flex;align-items:center;justify-content:space-between">
+      <span style="color:#8b5cf6;font-weight:600">
+        <i class="bi bi-person-fill me-1"></i>
+        {{ request.session.user_preference|title }} Mode
+      </span>
+      <a href="{% url 'profile' %}" style="color:var(--text-secondary);font-size:11px">Change</a>
+    </div>
+  </div>
+
+  <div class="nav-section-title">Main</div>
+  <a href="{% url 'dashboard' %}" class="nav-item-custom {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+    <i class="bi bi-grid-fill"></i> Dashboard
+  </a>
+  <a href="{% url 'process' %}" class="nav-item-custom {% if request.resolver_match.url_name == 'process' %}active{% endif %}">
+    <i class="bi bi-magic"></i> Process Image
+  </a>
+  <a href="{% url 'ab_compare' %}" class="nav-item-custom {% if request.resolver_match.url_name == 'ab_compare' %}active{% endif %}">
+    <i class="bi bi-layout-split"></i> A/B Compare
+  </a>
+  <a href="{% url 'bulk' %}" class="nav-item-custom {% if request.resolver_match.url_name == 'bulk' %}active{% endif %}">
+    <i class="bi bi-images"></i> Bulk Process
+  </a>
+  <a href="{% url 'caption_histogram' %}" class="nav-item-custom {% if request.resolver_match.url_name == 'caption_histogram' %}active{% endif %}">
+    <i class="bi bi-chat-square-text-fill"></i> Caption & Histogram
+  </a>
+
+  <div class="nav-section-title">Data</div>
+  <a href="{% url 'analytics' %}" class="nav-item-custom {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+    <i class="bi bi-bar-chart-fill"></i> Analytics
+  </a>
+  <a href="{% url 'history' %}" class="nav-item-custom {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
+    <i class="bi bi-clock-history"></i> History
+  </a>
+
+  <div class="nav-section-title">Account</div>
+  <a href="{% url 'profile' %}" class="nav-item-custom {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+    <i class="bi bi-person-circle"></i> Profile
+  </a>
+  <a href="{% url 'logout' %}" class="nav-item-custom" style="color:#ef4444">
+    <i class="bi bi-box-arrow-left"></i> Logout
+  </a>
+
+  <!-- Bottom info -->
+  <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--glass-border)">
+    <div style="font-size:11px;color:var(--text-secondary);text-align:center">
+      ViralGen AI v1.0<br>
+      <span style="color:var(--accent-green)">● DIP Lab Active</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content" id="mainContent">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+      <div style="font-size:13px;color:var(--text-secondary)">{% block page_subtitle %}{% endblock %}</div>
+    </div>
+    <div class="user-badge">
+      <div class="user-avatar">{{ request.session.user_name|first|upper|default:"U" }}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600">{{ request.session.user_name|default:"User" }}</div>
+        <div style="font-size:11px;color:var(--text-secondary)">{{ request.session.user_email }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Django messages -->
+  {% if messages %}
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} fade-in" style="background:rgba(79,142,255,0.1);border:1px solid rgba(79,142,255,0.3);color:#f0f4ff;border-radius:10px;margin-bottom:16px" role="alert">
+      {{ msg }}
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</main>
+
+{% else %}
+<!-- No sidebar for auth pages -->
+{% if messages %}
+  <div style="position:fixed;top:16px;right:16px;z-index:9999;max-width:320px">
+    {% for msg in messages %}
+    <div class="alert fade-in" style="background:rgba(13,20,33,0.95);border:1px solid var(--glass-border);color:#f0f4ff;border-radius:10px;padding:12px 16px;margin-bottom:8px">
+      {{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Mobile sidebar toggle
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  // Auto-dismiss alerts
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(a => {
+      a.style.transition = 'opacity 0.5s';
+      a.style.opacity = '0';
+      setTimeout(() => a.remove(), 500);
+    });
+  }, 4000);
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

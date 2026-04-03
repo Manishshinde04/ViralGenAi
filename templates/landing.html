@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViralGen AI — Digital Image Processing Platform</title>
+  <meta name="description"
+    content="ViralGen AI — Professional DIP web app with 16+ processing tools, auto enhancement, A/B compare, color detection, and analytics.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --bg: #070b14;
+      --gradient: linear-gradient(135deg, #4f8eff 0%, #8b5cf6 50%, #06d6e3 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: #f0f4ff;
+      overflow-x: hidden;
+    }
+
+    /* Animated hero background */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: orbFloat 8s ease-in-out infinite alternate;
+    }
+
+    .orb1 {
+      width: 600px;
+      height: 600px;
+      background: #4f8eff;
+      top: -200px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+
+    .orb2 {
+      width: 500px;
+      height: 500px;
+      background: #8b5cf6;
+      top: -100px;
+      right: -100px;
+      animation-delay: 2s;
+    }
+
+    .orb3 {
+      width: 400px;
+      height: 400px;
+      background: #06d6e3;
+      bottom: -100px;
+      left: 30%;
+      animation-delay: 4s;
+    }
+
+    @keyframes orbFloat {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      100% {
+        transform: translate(30px, 20px) scale(1.05);
+      }
+    }
+
+    /* Navbar */
+    .navbar-custom {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 48px;
+      background: rgba(7, 11, 20, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links a {
+      color: rgba(240, 244, 255, 0.7);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-left: 32px;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #f0f4ff;
+    }
+
+    .btn-glow {
+      background: var(--gradient);
+      border: none;
+      color: white;
+      padding: 10px 28px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 0 24px rgba(79, 142, 255, 0.3);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .btn-glow:hover {
+      box-shadow: 0 0 40px rgba(79, 142, 255, 0.5);
+      transform: translateY(-1px);
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(79, 142, 255, 0.1);
+      border: 1px solid rgba(79, 142, 255, 0.3);
+      border-radius: 30px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4f8eff;
+      margin-bottom: 24px;
+    }
+
+    .hero-badge span {
+      width: 6px;
+      height: 6px;
+      background: #4f8eff;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(42px, 6vw, 80px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+
+    .gradient-text {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: rgba(240, 244, 255, 0.6);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-outline-hero {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f0f4ff;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-outline-hero:hover {
+      border-color: rgba(79, 142, 255, 0.5);
+      color: #f0f4ff;
+    }
+
+    /* Stats strip */
+    .stats-strip {
+      background: rgba(255, 255, 255, 0.02);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 32px 48px;
+      display: flex;
+      gap: 0;
+    }
+
+    .stats-strip-item {
+      flex: 1;
+      text-align: center;
+      padding: 0 24px;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stats-strip-item:last-child {
+      border-right: none;
+    }
+
+    .stats-strip-value {
+      font-family: 'Space Grotesk';
+      font-size: 36px;
+      font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Features grid */
+    .features-section {
+      padding: 80px 48px;
+    }
+
+    .section-tag {
+      display: inline-block;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      color: #8b5cf6;
+      border-radius: 6px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: 'Space Grotesk';
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.25s ease;
+      height: 100%;
+    }
+
+    .feature-card:hover {
+      background: rgba(79, 142, 255, 0.05);
+      border-color: rgba(79, 142, 255, 0.25);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .feature-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: rgba(240, 244, 255, 0.55);
+      line-height: 1.6;
+    }
+
+    .difficulty-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-easy {
+      background: rgba(16, 219, 160, 0.15);
+      color: #10dba0;
+    }
+
+    .badge-medium {
+      background: rgba(249, 115, 22, 0.15);
+      color: #f97316;
+    }
+
+    .badge-advanced {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      margin: 40px 48px 80px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(79, 142, 255, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+      border: 1px solid rgba(79, 142, 255, 0.2);
+      padding: 72px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(79, 142, 255, 0.08) 0%, transparent 70%);
+    }
+
+    footer {
+      background: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 32px 48px;
+      text-align: center;
+      color: rgba(240, 244, 255, 0.4);
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar-custom">
+    <div class="nav-logo">⚡ ViralGen AI</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+      <a href="{% url 'login' %}">Login</a>
+    </div>
+    <a href="{% url 'register' %}" class="btn-glow">Get Started Free</a>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-orb orb1"></div>
+      <div class="hero-orb orb2"></div>
+      <div class="hero-orb orb3"></div>
+    </div>
+    <div style="position:relative;z-index:1;max-width:800px">
+      <div class="hero-badge">
+        <span></span>
+        Digital Image Processing Lab · 18+ DIP Tools
+      </div>
+      <h1 class="hero-title">
+        Transform Images with<br>
+        <span class="gradient-text">ViralGenAI
+
+        </span>
+      </h1>
+      <p class="hero-subtitle">
+        Professional-grade Digital Image Processing platform. Auto-enhance, analyze colors, remove backgrounds, generate
+        QR codes, compare A/B versions, and export for any platform.
+      </p>
+      <div class="hero-actions">
+        <a href="{% url 'register' %}" class="btn-glow"
+          style="padding:14px 36px;font-size:15px;text-decoration:none;display:inline-block">
+          <i class="bi bi-lightning-fill me-2"></i>Start Processing
+        </a>
+        <a href="#features" class="btn-outline-hero">
+          <i class="bi bi-play-circle"></i> Explore Features
+        </a>
+      </div>
+
+
+  </section>
+
+  <!-- Stats Strip -->
+  <div class="stats-strip">
+    <div class="stats-strip-item">
+      <div class="stats-strip-value">18+</div>
+      <div style="font-size:13px;color:rgba(240,244,255,0.5);margin-top:4px">DIP Tools</div>
+    </div>
+    <div class="stats-strip-item">
+      <div class="stats-strip-value">4</div>
+      <div style="font-size:13px;color:rgba(240,244,255,0.5);margin-top:4px">Export Platforms</div>
+    </div>
+    <div class="stats-strip-item">
+      <div class="stats-strip-value">100</div>
+      <div style="font-size:13px;color:rgba(240,244,255,0.5);margin-top:4px">Quality Score</div>
+    </div>
+    <div class="stats-strip-item">
+      <div class="stats-strip-value">∞</div>
+      <div style="font-size:13px;color:rgba(240,244,255,0.5);margin-top:4px">Bulk Images</div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <section class="features-section" id="features">
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:56px">
+        <div class="section-tag">All Features</div>
+        <h2 class="section-title">Everything You Need for<br><span class="gradient-text">Digital Image Processing</span>
+        </h2>
+        <p style="color:rgba(240,244,255,0.5);font-size:16px;max-width:500px;margin:0 auto">18 powerful DIP tools built
+          with Pillow & OpenCV, ready for your viva explanation.</p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Easy features -->
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-easy">Easy</div>
+            <div class="feature-icon" style="background:rgba(16,219,160,0.1)">📤</div>
+            <h3>Multi-Platform Export</h3>
+            <p>Resize for Instagram (1:1), Facebook (4:5), LinkedIn (16:9) automatically using Lanczos resampling.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-easy">Easy</div>
+            <div class="feature-icon" style="background:rgba(79,142,255,0.1)">🎛️</div>
+            <h3>Processing Modes</h3>
+            <p>High Contrast, Soft Enhancement, Edge Highlight (Sobel), and Noise Reduction (Median/Bilateral).</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-easy">Easy</div>
+            <div class="feature-icon" style="background:rgba(139,92,246,0.1)">💧</div>
+            <h3>Watermark</h3>
+            <p>Auto-add "Processed by DIP Lab" watermark with adjustable opacity via alpha compositing.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-easy">Easy</div>
+            <div class="feature-icon" style="background:rgba(6,214,227,0.1)">🖼️</div>
+            <h3>Background Templates</h3>
+            <p>Overlay image on Minimal, Dark, Gradient, or Professional frame backgrounds.</p>
+          </div>
+        </div>
+
+        <!-- Medium features -->
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-medium">Medium</div>
+            <div class="feature-icon" style="background:rgba(249,115,22,0.1)">🎨</div>
+            <h3>Color Detection</h3>
+            <p>K-means clustering detects dominant colors. Shows hex palette & suggests best filter. (Color histogram
+              analysis)</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-medium">Medium</div>
+            <div class="feature-icon" style="background:rgba(249,115,22,0.1)">📁</div>
+            <h3>Category Presets</h3>
+            <p>Optimized filters for Portrait, Landscape, Document (Otsu thresholding), and Low-light images.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-medium">Medium</div>
+            <div class="feature-icon" style="background:rgba(249,115,22,0.1)">📊</div>
+            <h3>Analytics Dashboard</h3>
+            <p>Chart.js visualization of filter usage, tool activity, and daily processing trends with MongoDB data.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-medium">Medium</div>
+            <div class="feature-icon" style="background:rgba(249,115,22,0.1)">⬇️</div>
+            <h3>Download Processed</h3>
+            <p>Download in PNG or JPG format directly from the browser with one click.</p>
+          </div>
+        </div>
+
+        <!-- Advanced features -->
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-advanced">Advanced</div>
+            <div class="feature-icon" style="background:rgba(239,68,68,0.1)">⚖️</div>
+            <h3>A/B Processing</h3>
+            <p>Generate High Contrast (A) vs Soft Enhancement (B). Compare quality scores side-by-side.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-advanced">Advanced</div>
+            <div class="feature-icon" style="background:rgba(239,68,68,0.1)">🏆</div>
+            <h3>Image Quality Score</h3>
+            <p>Scores brightness balance, contrast (std deviation), sharpness (Laplacian variance) & color richness.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-advanced">Advanced</div>
+            <div class="feature-icon" style="background:rgba(239,68,68,0.1)">📦</div>
+            <h3>Bulk Processing</h3>
+            <p>Upload up to 10 images and apply the same DIP operation to all simultaneously.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-advanced">Advanced</div>
+            <div class="feature-icon" style="background:rgba(239,68,68,0.1)">✨</div>
+            <h3>Auto Enhancement</h3>
+            <p>Adaptive brightness correction, contrast enhancement, sharpness via unsharp masking.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-advanced">Advanced</div>
+            <div class="feature-icon" style="background:rgba(239,68,68,0.1)">✂️</div>
+            <h3>Background Removal</h3>
+            <p>GrabCut algorithm + thresholding to remove white/light backgrounds. Key DIP morphological concept.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-advanced">Advanced</div>
+            <div class="feature-icon" style="background:rgba(239,68,68,0.1)">📱</div>
+            <h3>QR Code Overlay</h3>
+            <p>Generate QR code from any text and overlay it on processed images at the corner.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-advanced">Advanced</div>
+            <div class="feature-icon" style="background:rgba(239,68,68,0.1)">🌙</div>
+            <h3>Creative Modes</h3>
+            <p>Night (brighten + blue shift), Vintage (sepia + grain), Summer (warm tones + saturation).</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-advanced">Advanced</div>
+            <div class="feature-icon" style="background:rgba(249,115,22,0.1)">🤖</div>
+            <h3>AI Caption Generator</h3>
+            <p>Analyzes image mood, scene & colors to auto-generate 5 caption styles with smart hashtags. No AI API
+              needed.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="difficulty-badge badge-medium">Medium</div>
+            <div class="feature-icon" style="background:rgba(6,214,227,0.1)">📊</div>
+            <h3>Image Histogram</h3>
+            <p>RGB + Grayscale histogram visualization with per-channel stats: mean, std dev, median, mode, min & max.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section" id="about">
+    <div style="position:relative;z-index:1">
+      <div class="section-tag" style="background:rgba(79,142,255,0.1);border-color:rgba(79,142,255,0.3);color:#4f8eff">
+        Get Started</div>
+      <h2 class="section-title" style="margin-bottom:16px">Ready to Process Images<br><span class="gradient-text">Like a
+          Pro?</span></h2>
+      <p style="color:rgba(240,244,255,0.5);font-size:16px;margin-bottom:36px">Join ViralGen AI — Built with Django +
+        MongoDB + OpenCV + Pillow</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+        <a href="{% url 'register' %}" class="btn-glow" style="padding:14px 36px;font-size:15px;text-decoration:none">
+          <i class="bi bi-lightning-fill me-2"></i>Create Free Account
+        </a>
+        <a href="{% url 'login' %}" class="btn-outline-hero">Already have account? Login</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div>⚡ <strong style="color:#4f8eff">ViralGen AI</strong> — Digital Image Processing Lab · Built with Django +
+      OpenCV + MongoDB</div>
+    <div style="margin-top:8px">© 2024 ViralGen AI · All rights reserved</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

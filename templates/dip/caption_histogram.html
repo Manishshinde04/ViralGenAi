@@ -1,0 +1,580 @@
+{% extends 'base.html' %}
+{% block title %}AI Caption & Histogram — ViralGen AI{% endblock %}
+{% block page_title %}AI Caption & Histogram{% endblock %}
+{% block page_subtitle %}Generate captions & analyze image histograms{% endblock %}
+
+{% block extra_head %}
+<style>
+  .preview-img { max-height: 280px; object-fit: contain; border-radius: 12px; width: 100%; }
+
+  /* Tab system */
+  .tab-nav { display: flex; gap: 4px; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+  .tab-btn {
+    flex: 1; padding: 10px 16px; border: none; background: transparent; color: rgba(240,244,255,0.5);
+    border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .tab-btn.active { background: rgba(79,142,255,0.15); color: #4f8eff; }
+  .tab-btn:hover:not(.active) { color: rgba(240,244,255,0.8); }
+  .tab-content { display: none; animation: fadeIn 0.4s ease; }
+  .tab-content.active { display: block; }
+
+  /* Caption cards */
+  .caption-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 16px; margin-bottom: 12px;
+    transition: all 0.25s ease; position: relative; cursor: pointer;
+  }
+  .caption-card:hover { border-color: rgba(79,142,255,0.3); background: rgba(79,142,255,0.05); }
+  .caption-card .caption-type {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .caption-card .caption-text { font-size: 14px; line-height: 1.6; color: rgba(240,244,255,0.85); }
+  .caption-card .copy-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(79,142,255,0.15); border: 1px solid rgba(79,142,255,0.3);
+    color: #4f8eff; border-radius: 8px; padding: 4px 10px; font-size: 11px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s; opacity: 0;
+  }
+  .caption-card:hover .copy-btn { opacity: 1; }
+  .caption-card .copy-btn:hover { background: rgba(79,142,255,0.25); }
+
+  /* Hashtag chips */
+  .hashtag-chip {
+    display: inline-block; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 500;
+    color: #a78bfa; margin: 3px; cursor: pointer; transition: all 0.2s;
+  }
+  .hashtag-chip:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
+
+  /* Analysis badge */
+  .analysis-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 10px 14px; font-size: 13px;
+  }
+  .analysis-badge .badge-label { font-size: 10px; color: rgba(240,244,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
+  .analysis-badge .badge-value { font-size: 14px; font-weight: 700; }
+
+  /* Histogram stats table */
+  .hist-stats-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .hist-stats-table th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: rgba(240,244,255,0.4); font-weight: 600; padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left;
+  }
+  .hist-stats-table td {
+    font-size: 13px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: rgba(240,244,255,0.8);
+  }
+  .hist-stats-table tr:last-child td { border-bottom: none; }
+
+  .channel-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; }
+
+  /* Mood indicator */
+  .mood-orb {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    animation: moodPulse 3s ease-in-out infinite;
+  }
+  @keyframes moodPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(79,142,255,0); }
+    50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(79,142,255,0.3); }
+  }
+
+  /* Processing overlay */
+  .processing-overlay {
+    position: absolute; inset: 0; background: rgba(7,11,20,0.85);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px; z-index: 10;
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Left: Upload Panel -->
+  <div class="col-lg-4">
+    <div class="glass-card p-4 h-100">
+      <h5 style="font-weight:700;margin-bottom:16px;font-size:15px">
+        <i class="bi bi-upload me-2" style="color:#4f8eff"></i>Upload Image
+      </h5>
+
+      <!-- Drop zone -->
+      <div class="drop-zone" id="dropZone" style="padding:32px;text-align:center;margin-bottom:20px;position:relative">
+        <input type="file" id="imageInput" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+        <div id="dropContent">
+          <div style="font-size:36px;margin-bottom:10px">🖼️</div>
+          <div style="font-size:14px;font-weight:600;color:#f0f4ff">Drop image here</div>
+          <div style="font-size:12px;color:rgba(240,244,255,0.4);margin-top:4px">or click to browse · PNG, JPG, WEBP</div>
+        </div>
+        <img id="previewImg" class="preview-img" src="" style="display:none">
+      </div>
+
+      <!-- Action buttons -->
+      <button class="btn-gradient" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px" id="captionBtn" onclick="generateCaption()">
+        <i class="bi bi-chat-square-text-fill me-2"></i>Generate AI Captions
+      </button>
+      <button class="btn-outline-glow" style="width:100%;padding:12px;font-size:14px" id="histogramBtn" onclick="generateHistogram()">
+        <i class="bi bi-bar-chart-line-fill me-2"></i>Generate Histogram
+      </button>
+
+      <!-- Quick info -->
+      <div style="margin-top:20px;padding:14px;background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.15);border-radius:12px">
+        <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:8px"><i class="bi bi-lightbulb-fill me-1"></i> How it works</div>
+        <ul style="font-size:12px;color:rgba(240,244,255,0.5);margin:0;padding-left:16px;line-height:1.8">
+          <li><strong style="color:#4f8eff">AI Captions</strong> — Analyzes colors, brightness, edges & mood to generate 5 caption styles</li>
+          <li><strong style="color:#06d6e3">Histogram</strong> — Visualizes RGB + Grayscale pixel intensity distribution with channel stats</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Results -->
+  <div class="col-lg-8">
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('captions')" id="tabCaption">
+        <i class="bi bi-chat-square-text-fill"></i> AI Captions
+      </button>
+      <button class="tab-btn" onclick="switchTab('histogram')" id="tabHistogram">
+        <i class="bi bi-bar-chart-line-fill"></i> Image Histogram
+      </button>
+    </div>
+
+    <!-- ═══ CAPTIONS TAB ═══ -->
+    <div class="tab-content active" id="captionsTab">
+      <!-- Empty state -->
+      <div id="captionEmpty" class="glass-card p-4" style="text-align:center">
+        <div style="padding:48px;color:rgba(240,244,255,0.2)">
+          <div style="font-size:56px;margin-bottom:16px">💬</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:6px">AI Caption Generator</div>
+          <div style="font-size:13px;color:rgba(240,244,255,0.35)">Upload an image and click "Generate AI Captions" to get started</div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="captionResults" style="display:none">
+        <!-- Mood & Scene Analysis -->
+        <div class="glass-card p-4 mb-4">
+          <h6 style="font-weight:700;font-size:13px;margin-bottom:14px">
+            <i class="bi bi-eye-fill me-2" style="color:#f97316"></i>Image Analysis
+          </h6>
+          <div style="display:flex;flex-wrap:wrap;gap:10px" id="analysisPanel">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+
+        <!-- Caption Cards -->
+        <div id="captionCards">
+          <!-- Filled dynamically -->
+        </div>
+
+        <!-- Hashtags -->
+        <div class="glass-card p-4 mb-4" id="hashtagPanel" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <h6 style="font-weight:700;font-size:13px;margin:0">
+              <i class="bi bi-hash me-2" style="color:#a78bfa"></i>Suggested Hashtags
+            </h6>
+            <button class="copy-btn" style="opacity:1;position:static;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer" onclick="copyAllHashtags()">
+              <i class="bi bi-clipboard me-1"></i>Copy All
+            </button>
+          </div>
+          <div id="hashtagContainer" style="line-height:2">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ HISTOGRAM TAB ═══ -->
+    <div class="tab-content" id="histogramTab">
+      <!-- Empty state -->
+      <div id="histogramEmpty" class="glass-card p-4" style="text-align:center">
+        <div style="padding:48px;color:rgba(240,244,255,0.2)">
+          <div style="font-size:56px;margin-bottom:16px">📊</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:6px">Image Histogram</div>
+          <div style="font-size:13px;color:rgba(240,244,255,0.35)">Upload an image and click "Generate Histogram" to analyze</div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="histogramResults" style="display:none">
+        <!-- Histogram Chart -->
+        <div class="glass-card p-4 mb-4">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <h6 style="font-weight:700;font-size:13px;margin:0">
+              <i class="bi bi-bar-chart-line-fill me-2" style="color:#06d6e3"></i>Pixel Intensity Distribution
+            </h6>
+            <span class="badge-glow" style="font-size:10px">RGB + Grayscale</span>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06)">
+            <img id="histogramChart" src="" style="width:100%;display:block;border-radius:12px">
+          </div>
+        </div>
+
+        <!-- Overall Stats -->
+        <div class="row g-3 mb-4">
+          <div class="col-4">
+            <div class="stat-card text-center">
+              <div style="font-size:11px;color:rgba(240,244,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Brightness</div>
+              <div class="stat-value" style="font-size:28px" id="overallBrightness">—</div>
+              <div style="font-size:11px;color:rgba(240,244,255,0.3);margin-top:2px">/ 255</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="stat-card text-center">
+              <div style="font-size:11px;color:rgba(240,244,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Contrast</div>
+              <div class="stat-value" style="font-size:28px" id="overallContrast">—</div>
+              <div style="font-size:11px;color:rgba(240,244,255,0.3);margin-top:2px">Std Dev</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="stat-card text-center">
+              <div style="font-size:11px;color:rgba(240,244,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Dynamic Range</div>
+              <div class="stat-value" style="font-size:28px" id="overallRange">—</div>
+              <div style="font-size:11px;color:rgba(240,244,255,0.3);margin-top:2px">/ 255</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel Statistics -->
+        <div class="glass-card p-4">
+          <h6 style="font-weight:700;font-size:13px;margin-bottom:14px">
+            <i class="bi bi-table me-2" style="color:#4f8eff"></i>Channel Statistics
+          </h6>
+          <div style="overflow-x:auto">
+            <table class="hist-stats-table">
+              <thead>
+                <tr>
+                  <th>Channel</th>
+                  <th>Mean</th>
+                  <th>Std Dev</th>
+                  <th>Median</th>
+                  <th>Mode</th>
+                  <th>Min</th>
+                  <th>Max</th>
+                </tr>
+              </thead>
+              <tbody id="channelStatsBody">
+                <!-- Filled dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // ─── File Upload ───────────────────────────
+  const dropZone = document.getElementById('dropZone');
+  const imageInput = document.getElementById('imageInput');
+  const preview = document.getElementById('previewImg');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  imageInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      document.getElementById('dropContent').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ─── Tab Switching ───────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    if (tab === 'captions') {
+      document.getElementById('tabCaption').classList.add('active');
+      document.getElementById('captionsTab').classList.add('active');
+    } else {
+      document.getElementById('tabHistogram').classList.add('active');
+      document.getElementById('histogramTab').classList.add('active');
+    }
+  }
+
+  // ─── Generate AI Captions ───────────────────
+  let captionData = null;
+
+  async function generateCaption() {
+    const file = imageInput.files[0];
+    if (!file) { showToast('Please upload an image first', 'warning'); return; }
+
+    const btn = document.getElementById('captionBtn');
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Analyzing...';
+    btn.disabled = true;
+    switchTab('captions');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const resp = await fetch('/caption/api/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        captionData = data;
+        showCaptionResults(data);
+        showToast('AI Captions generated! 💬', 'success');
+      } else {
+        showToast('Error: ' + data.error, 'danger');
+      }
+    } catch (e) {
+      showToast('Failed: ' + e.message, 'danger');
+    } finally {
+      btn.innerHTML = '<i class="bi bi-chat-square-text-fill me-2"></i>Generate AI Captions';
+      btn.disabled = false;
+    }
+  }
+
+  function showCaptionResults(data) {
+    document.getElementById('captionEmpty').style.display = 'none';
+    document.getElementById('captionResults').style.display = 'block';
+
+    // Analysis panel
+    const moodIcons = {
+      dramatic: '🎭', moody: '🌙', vibrant: '🎨', energetic: '⚡', warm: '🌅',
+      serene: '💫', calm: '🕊️', bold: '🔥', balanced: '⚖️', minimal: '🤍', bright: '☀️', dreamy: '💭'
+    };
+    const sceneIcons = {
+      nature: '🌿', urban: '🏙️', night: '🌃', sky: '🌤️', sunset: '🌅',
+      portrait: '🧑', landscape: '🏔️', colorful: '🌈', minimal: '⬜', document: '📄', general: '📷'
+    };
+
+    const analysis = data.analysis;
+    document.getElementById('analysisPanel').innerHTML = `
+      <div class="analysis-badge">
+        <div class="mood-orb" style="background:rgba(79,142,255,0.15);width:36px;height:36px;font-size:18px">
+          ${moodIcons[data.mood] || '💡'}
+        </div>
+        <div>
+          <div class="badge-label">Mood</div>
+          <div class="badge-value" style="color:#4f8eff;text-transform:capitalize">${data.mood}</div>
+        </div>
+      </div>
+      <div class="analysis-badge">
+        <span style="font-size:20px">${sceneIcons[data.scene] || '📷'}</span>
+        <div>
+          <div class="badge-label">Scene</div>
+          <div class="badge-value" style="color:#06d6e3;text-transform:capitalize">${data.scene}</div>
+        </div>
+      </div>
+      <div class="analysis-badge">
+        <div style="width:20px;height:20px;border-radius:6px;background:${analysis.dominant_color};border:2px solid rgba(255,255,255,0.2)"></div>
+        <div>
+          <div class="badge-label">Dominant Color</div>
+          <div class="badge-value" style="font-size:12px">${analysis.dominant_color}</div>
+        </div>
+      </div>
+      <div class="analysis-badge">
+        <span style="font-size:18px">${analysis.warmth === 'warm' ? '🔆' : (analysis.warmth === 'cool' ? '❄️' : '⚪')}</span>
+        <div>
+          <div class="badge-label">Temperature</div>
+          <div class="badge-value" style="text-transform:capitalize;font-size:13px">${analysis.warmth}</div>
+        </div>
+      </div>
+      <div class="analysis-badge">
+        <span style="font-size:18px">💡</span>
+        <div>
+          <div class="badge-label">Brightness</div>
+          <div class="badge-value" style="font-size:13px">${analysis.brightness}/255</div>
+        </div>
+      </div>
+      <div class="analysis-badge">
+        <span style="font-size:18px">🎯</span>
+        <div>
+          <div class="badge-label">Edge Detail</div>
+          <div class="badge-value" style="font-size:13px">${analysis.edge_density}%</div>
+        </div>
+      </div>
+    `;
+
+    // Caption cards
+    const typeConfig = {
+      engaging: { icon: '🔥', label: 'Social Media / Engaging', color: '#f97316' },
+      professional: { icon: '💼', label: 'Professional / Portfolio', color: '#4f8eff' },
+      descriptive: { icon: '📝', label: 'Descriptive / Alt Text', color: '#06d6e3' },
+      witty: { icon: '😄', label: 'Witty / Fun', color: '#10dba0' },
+      story: { icon: '📖', label: 'Story / Narrative', color: '#a78bfa' }
+    };
+
+    let cardsHtml = '';
+    for (const [type, text] of Object.entries(data.captions)) {
+      const cfg = typeConfig[type] || { icon: '💬', label: type, color: '#4f8eff' };
+      cardsHtml += `
+        <div class="caption-card" onclick="copyCaption(this, '${type}')">
+          <button class="copy-btn"><i class="bi bi-clipboard me-1"></i>Copy</button>
+          <div class="caption-type" style="color:${cfg.color}">
+            <span style="font-size:14px">${cfg.icon}</span> ${cfg.label}
+          </div>
+          <div class="caption-text" id="caption-${type}">${text}</div>
+        </div>
+      `;
+    }
+    document.getElementById('captionCards').innerHTML = cardsHtml;
+
+    // Hashtags
+    const hashtagPanel = document.getElementById('hashtagPanel');
+    hashtagPanel.style.display = 'block';
+    let tagsHtml = '';
+    data.hashtags.forEach(tag => {
+      tagsHtml += `<span class="hashtag-chip" onclick="copySingle('${tag}')">${tag}</span>`;
+    });
+    document.getElementById('hashtagContainer').innerHTML = tagsHtml;
+  }
+
+  // ─── Generate Histogram ───────────────────
+  async function generateHistogram() {
+    const file = imageInput.files[0];
+    if (!file) { showToast('Please upload an image first', 'warning'); return; }
+
+    const btn = document.getElementById('histogramBtn');
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Analyzing...';
+    btn.disabled = true;
+    switchTab('histogram');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const resp = await fetch('/histogram/api/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        showHistogramResults(data);
+        showToast('Histogram generated! 📊', 'success');
+      } else {
+        showToast('Error: ' + data.error, 'danger');
+      }
+    } catch (e) {
+      showToast('Failed: ' + e.message, 'danger');
+    } finally {
+      btn.innerHTML = '<i class="bi bi-bar-chart-line-fill me-2"></i>Generate Histogram';
+      btn.disabled = false;
+    }
+  }
+
+  function showHistogramResults(data) {
+    document.getElementById('histogramEmpty').style.display = 'none';
+    document.getElementById('histogramResults').style.display = 'block';
+
+    // Histogram chart image
+    document.getElementById('histogramChart').src = data.histogram_url + '?t=' + Date.now();
+
+    // Overall stats with animation
+    animateValue('overallBrightness', data.stats.brightness);
+    animateValue('overallContrast', data.stats.contrast);
+    animateValue('overallRange', data.stats.dynamic_range);
+
+    // Channel stats table
+    const channels = [
+      { key: 'red', label: 'Red', color: '#ef4444' },
+      { key: 'green', label: 'Green', color: '#22c55e' },
+      { key: 'blue', label: 'Blue', color: '#4f8eff' },
+      { key: 'gray', label: 'Grayscale', color: '#9ca3af' }
+    ];
+
+    let tbodyHtml = '';
+    channels.forEach(ch => {
+      const s = data.stats[ch.key];
+      tbodyHtml += `
+        <tr>
+          <td><span class="channel-dot" style="background:${ch.color}"></span>${ch.label}</td>
+          <td>${s.mean}</td>
+          <td>${s.std}</td>
+          <td>${s.median}</td>
+          <td>${s.mode}</td>
+          <td>${s.min}</td>
+          <td>${s.max}</td>
+        </tr>
+      `;
+    });
+    document.getElementById('channelStatsBody').innerHTML = tbodyHtml;
+  }
+
+  function animateValue(elemId, target) {
+    const elem = document.getElementById(elemId);
+    const targetVal = parseFloat(target);
+    let current = 0;
+    const step = targetVal / 30;
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= targetVal) { current = targetVal; clearInterval(timer); }
+      elem.textContent = Math.round(current * 10) / 10;
+    }, 30);
+  }
+
+  // ─── Copy Utilities ───────────────────
+  function copyCaption(card, type) {
+    const text = document.getElementById(`caption-${type}`).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = card.querySelector('.copy-btn');
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Copied!';
+      btn.style.opacity = '1';
+      setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy'; }, 2000);
+    });
+  }
+
+  function copySingle(tag) {
+    navigator.clipboard.writeText(tag).then(() => showToast(`Copied: ${tag}`, 'info'));
+  }
+
+  function copyAllHashtags() {
+    if (!captionData) return;
+    const allTags = captionData.hashtags.join(' ');
+    navigator.clipboard.writeText(allTags).then(() => showToast('All hashtags copied! ✅', 'success'));
+  }
+
+  // ─── Utilities ───────────────────
+  function showToast(msg, type) {
+    const colors = { success: '#10dba0', warning: '#f97316', danger: '#ef4444', info: '#4f8eff' };
+    const icons = { success: '✅', warning: '⚠️', danger: '❌', info: 'ℹ️' };
+    const toast = document.createElement('div');
+    toast.className = 'toast-custom';
+    toast.innerHTML = `<span style="font-size:18px">${icons[type]||'ℹ️'}</span><span style="font-size:13px;color:#f0f4ff">${msg}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.5s'; setTimeout(() => toast.remove(), 500); }, 3000);
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach(cookie => {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+      });
+    }
+    return cookieValue;
+  }
+</script>
+{% endblock %}

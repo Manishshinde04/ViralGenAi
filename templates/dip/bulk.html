@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block title %}Bulk Process — ViralGen AI{% endblock %}
+{% block page_title %}Bulk Processing{% endblock %}
+{% block page_subtitle %}Upload up to 10 images and apply the same DIP operation{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="glass-card p-4">
+      <h5 style="font-weight:700;margin-bottom:16px;font-size:15px"><i class="bi bi-images me-2" style="color:#06d6e3"></i>Upload Images</h5>
+
+      <div class="drop-zone" id="bulkDrop" style="padding:32px;text-align:center;margin-bottom:20px;position:relative">
+        <input type="file" id="bulkInput" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer">
+        <div style="font-size:36px;margin-bottom:10px">📦</div>
+        <div style="font-size:14px;font-weight:600;color:#f0f4ff">Drop images here</div>
+        <div style="font-size:12px;color:rgba(240,244,255,0.4);margin-top:4px">Up to 10 images · PNG, JPG</div>
+      </div>
+
+      <!-- Selected files list -->
+      <div id="fileList" style="margin-bottom:16px;max-height:140px;overflow-y:auto;display:none">
+      </div>
+
+      <div class="option-row mb-3">
+        <div>
+          <label class="form-label-dark">Processing Mode</label>
+          <select class="form-control-dark" id="bulkMode">
+            <option value="none">Auto Enhance Only</option>
+            <option value="high_contrast">High Contrast</option>
+            <option value="soft_enhancement">Soft Enhancement</option>
+            <option value="edge_highlight">Edge Highlight</option>
+            <option value="noise_reduction">Noise Reduction</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label-dark">Category</label>
+          <select class="form-control-dark" id="bulkCategory">
+            <option value="none">None</option>
+            <option value="portrait">Portrait</option>
+            <option value="landscape">Landscape</option>
+            <option value="document">Document</option>
+            <option value="low_light">Low-Light</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="option-row mb-3">
+        <div>
+          <label class="form-label-dark">Creative Mode</label>
+          <select class="form-control-dark" id="bulkCreative">
+            <option value="none">None</option>
+            <option value="night">Night</option>
+            <option value="vintage">Vintage</option>
+            <option value="summer">Summer</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label-dark">Platform</label>
+          <select class="form-control-dark" id="bulkPlatform">
+            <option value="original">Original</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+            <option value="linkedin">LinkedIn</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="feature-toggle active mb-4" id="bulkWatermark" onclick="this.classList.toggle('active')" style="width:fit-content">
+        <i class="bi bi-droplet-fill"></i> Add Watermark
+      </div>
+
+      <button class="btn-gradient" style="width:100%;padding:12px;font-size:14px" id="bulkBtn" onclick="processBulk()">
+        <i class="bi bi-cpu-fill me-2"></i>Process All Images
+      </button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="col-lg-7">
+    <div class="glass-card p-4">
+      <h5 style="font-weight:700;margin-bottom:16px;font-size:15px"><i class="bi bi-check2-all me-2" style="color:#10dba0"></i>Results</h5>
+      <div id="bulkResults"></div>
+      <div id="bulkEmpty" style="text-align:center;padding:60px;color:rgba(240,244,255,0.25)">
+        <div style="font-size:48px;margin-bottom:12px">📦</div>
+        <div style="font-size:14px">Upload multiple images to start bulk processing</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const bulkInput = document.getElementById('bulkInput');
+
+  bulkInput.addEventListener('change', updateFileList);
+
+  function updateFileList() {
+    const files = bulkInput.files;
+    const list = document.getElementById('fileList');
+    list.style.display = files.length ? 'block' : 'none';
+    list.innerHTML = '';
+    Array.from(files).slice(0, 10).forEach((f, i) => {
+      list.innerHTML += `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:4px">
+          <span style="font-size:16px">🖼️</span>
+          <span style="font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</span>
+          <span style="font-size:11px;color:rgba(240,244,255,0.3)">${(f.size/1024).toFixed(0)}KB</span>
+        </div>`;
+    });
+    if (files.length > 10) {
+      list.innerHTML += `<div style="font-size:12px;color:#f97316;padding:6px 12px">⚠️ Only first 10 images will be processed</div>`;
+    }
+  }
+
+  async function processBulk() {
+    const files = bulkInput.files;
+    if (!files.length) { alert('Please select at least one image'); return; }
+
+    const btn = document.getElementById('bulkBtn');
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Processing...';
+    btn.disabled = true;
+
+    const fd = new FormData();
+    Array.from(files).slice(0, 10).forEach(f => fd.append('images', f));
+    fd.append('mode', document.getElementById('bulkMode').value);
+    fd.append('category', document.getElementById('bulkCategory').value);
+    fd.append('creative_mode', document.getElementById('bulkCreative').value);
+    fd.append('platform', document.getElementById('bulkPlatform').value);
+    fd.append('auto_enhance', 'true');
+    fd.append('add_watermark', document.getElementById('bulkWatermark').classList.contains('active') ? 'true' : 'false');
+
+    // Show progress
+    document.getElementById('bulkEmpty').style.display = 'none';
+    const resultsDiv = document.getElementById('bulkResults');
+    resultsDiv.innerHTML = '<div style="text-align:center;padding:32px;color:rgba(240,244,255,0.5)"><i class="bi bi-arrow-repeat spin" style="font-size:32px;color:#4f8eff"></i><div style="margin-top:12px">Processing your images...</div></div>';
+
+    try {
+      const resp = await fetch('/bulk/api/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd
+      });
+      const data = await resp.json();
+      displayBulkResults(data.results);
+    } catch (e) {
+      resultsDiv.innerHTML = `<div style="color:#ef4444;padding:20px">Error: ${e.message}</div>`;
+    } finally {
+      btn.innerHTML = '<i class="bi bi-cpu-fill me-2"></i>Process All Images';
+      btn.disabled = false;
+    }
+  }
+
+  function displayBulkResults(results) {
+    const div = document.getElementById('bulkResults');
+    const success = results.filter(r => r.status === 'success').length;
+    div.innerHTML = `
+      <div style="background:rgba(16,219,160,0.1);border:1px solid rgba(16,219,160,0.2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:14px">
+        ✅ <strong>${success}/${results.length}</strong> images processed successfully
+      </div>
+      <div class="row g-2">
+        ${results.map(r => `
+          <div class="col-6 col-md-4">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid ${r.status==='success'?'rgba(16,219,160,0.2)':'rgba(239,68,68,0.2)'};border-radius:10px;overflow:hidden">
+              ${r.status === 'success'
+                ? `<img src="${r.processed_url}" style="width:100%;height:100px;object-fit:cover">`
+                : `<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:28px">❌</div>`}
+              <div style="padding:10px">
+                <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.original_name}</div>
+                ${r.status === 'success'
+                  ? `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+                      <span style="font-size:11px;color:rgba(240,244,255,0.4)">Quality: <strong style="color:#10dba0">${r.quality_score}</strong></span>
+                      <a href="/download/${r.processed_url.split('/').pop()}/?format=PNG" style="font-size:11px;color:#4f8eff"><i class="bi bi-download"></i></a>
+                    </div>`
+                  : `<div style="font-size:11px;color:#ef4444;margin-top:4px">${r.error||'Failed'}</div>`}
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  function getCookie(name) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+      c = c.trim();
+      if (c.startsWith(name + '=')) v = decodeURIComponent(c.slice(name.length + 1));
+    });
+    return v;
+  }
+</script>
+{% endblock %}

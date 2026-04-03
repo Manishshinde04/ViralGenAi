@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}History — ViralGen AI{% endblock %}
+{% block page_title %}Processing History{% endblock %}
+{% block page_subtitle %}All your processed images{% endblock %}
+
+{% block content %}
+<div class="glass-card p-4">
+  {% if history %}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div style="font-size:13px;color:rgba(240,244,255,0.4)">
+      Showing <strong style="color:#f0f4ff">{{ history|length }}</strong> records
+    </div>
+  </div>
+
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:separate;border-spacing:0" class="table-dark-custom">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Preview</th>
+          <th>Original File</th>
+          <th>Filter</th>
+          <th>Category</th>
+          <th>Platform</th>
+          <th>Creative</th>
+          <th>Quality</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in history %}
+        <tr class="fade-in" style="animation-delay:{{ forloop.counter0 }}00ms">
+          <td style="color:rgba(240,244,255,0.3);font-size:12px">{{ forloop.counter }}</td>
+          <td>
+            {% if record.processed_filename %}
+            <img src="/media/processed/{{ record.processed_filename }}" 
+              style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.1)"
+              onerror="this.src='';this.style.background='rgba(255,255,255,0.05)';this.alt='—'">
+            {% else %}
+            <div style="width:40px;height:40px;border-radius:8px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:14px">🖼️</div>
+            {% endif %}
+          </td>
+          <td>
+            <div style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">
+              {{ record.original_filename|default:"—" }}
+            </div>
+          </td>
+          <td><span class="badge-glow">{{ record.filter_used|default:"auto" }}</span></td>
+          <td style="font-size:12px;color:rgba(240,244,255,0.5)">{{ record.category|default:"—" }}</td>
+          <td style="font-size:12px;color:rgba(240,244,255,0.5)">{{ record.platform|default:"original" }}</td>
+          <td style="font-size:12px;color:rgba(240,244,255,0.5)">{{ record.creative_mode|default:"—" }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              {% with score=record.quality_score %}
+              <div class="score-bar" style="width:40px">
+                <div style="height:100%;width:{{ score }}%;background:{% if score >= 80 %}#10dba0{% elif score >= 60 %}#4f8eff{% elif score >= 40 %}#f97316{% else %}#ef4444{% endif %};border-radius:3px"></div>
+              </div>
+              <span style="font-size:12px;font-weight:700;color:{% if score >= 80 %}#10dba0{% elif score >= 60 %}#4f8eff{% elif score >= 40 %}#f97316{% else %}#ef4444{% endif %}">{{ score }}</span>
+              {% endwith %}
+            </div>
+          </td>
+          <td style="font-size:11px;color:rgba(240,244,255,0.35)">
+            {{ record.created_at|date:"M d, H:i"|default:"—" }}
+          </td>
+          <td>
+            {% if record.processed_filename %}
+            <a href="/download/{{ record.processed_filename }}/?format=PNG" 
+              style="color:#4f8eff;font-size:14px" title="Download">
+              <i class="bi bi-download"></i>
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div style="text-align:center;padding:60px;color:rgba(240,244,255,0.25)">
+    <div style="font-size:48px;margin-bottom:16px">📋</div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:8px">No processing history yet</div>
+    <div style="font-size:13px;color:rgba(240,244,255,0.3);margin-bottom:20px">Start by processing your first image</div>
+    <a href="{% url 'process' %}" class="btn-gradient" style="text-decoration:none;padding:10px 28px;font-size:14px">
+      <i class="bi bi-magic me-2"></i>Process an Image
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block title %}A/B Compare — ViralGen AI{% endblock %}
+{% block page_title %}A/B Compare{% endblock %}
+{% block page_subtitle %}Compare two DIP processing versions side by side{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Upload -->
+  <div class="col-lg-4">
+    <div class="glass-card p-4">
+      <h5 style="font-weight:700;margin-bottom:16px;font-size:15px"><i class="bi bi-layout-split me-2" style="color:#8b5cf6"></i>Upload for Comparison</h5>
+
+      <div class="drop-zone" id="dropZoneAB" style="padding:28px;text-align:center;margin-bottom:20px;position:relative">
+        <input type="file" id="abInput" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+        <div id="abDropContent">
+          <div style="font-size:32px;margin-bottom:8px">⚖️</div>
+          <div style="font-size:13px;font-weight:600;color:#f0f4ff">Upload Image</div>
+          <div style="font-size:11px;color:rgba(240,244,255,0.4);margin-top:4px">PNG or JPG</div>
+        </div>
+        <img id="abPreview" src="" style="display:none;max-height:160px;object-fit:contain;border-radius:8px;width:100%">
+      </div>
+
+      <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:16px;margin-bottom:20px;font-size:13px">
+        <div style="font-weight:600;color:#8b5cf6;margin-bottom:8px"><i class="bi bi-info-circle me-2"></i>What gets generated?</div>
+        <div style="color:rgba(240,244,255,0.6);line-height:1.6">
+          <b style="color:#4f8eff">Version A:</b> High Contrast processing<br>
+          <b style="color:#06d6e3">Version B:</b> Soft Enhancement<br>
+          <small>Quality scores computed for each version</small>
+        </div>
+      </div>
+
+      <button class="btn-gradient" style="width:100%;padding:12px;font-size:14px" id="abBtn" onclick="runAB()">
+        <i class="bi bi-play-fill me-2"></i>Generate A/B Versions
+      </button>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="col-lg-8">
+    <div class="glass-card p-4">
+      <h5 style="font-weight:700;margin-bottom:16px;font-size:15px"><i class="bi bi-images me-2" style="color:#06d6e3"></i>Comparison</h5>
+
+      <div id="abResults" style="display:none">
+        <div class="row g-3">
+          <div class="col-6">
+            <div style="background:rgba(79,142,255,0.08);border:1px solid rgba(79,142,255,0.2);border-radius:12px;overflow:hidden">
+              <div style="background:rgba(79,142,255,0.15);padding:8px 14px;font-size:12px;font-weight:700;color:#4f8eff">
+                ⚡ VERSION A — High Contrast
+              </div>
+              <div style="padding:12px">
+                <img id="versionAImg" src="" style="width:100%;max-height:250px;object-fit:contain;border-radius:8px">
+                <div style="margin-top:10px">
+                  <div style="font-size:12px;color:rgba(240,244,255,0.5)">Quality Score</div>
+                  <div style="font-size:28px;font-weight:800;color:#4f8eff" id="scoreA">—</div>
+                  <div style="font-size:11px;color:rgba(240,244,255,0.35)" id="labelA"></div>
+                </div>
+                <button onclick="downloadAB('a')" class="btn-gradient" style="width:100%;padding:8px;font-size:12px;margin-top:10px">
+                  <i class="bi bi-download me-1"></i>Download A
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="background:rgba(6,214,227,0.08);border:1px solid rgba(6,214,227,0.2);border-radius:12px;overflow:hidden">
+              <div style="background:rgba(6,214,227,0.15);padding:8px 14px;font-size:12px;font-weight:700;color:#06d6e3">
+                🌊 VERSION B — Soft Enhancement
+              </div>
+              <div style="padding:12px">
+                <img id="versionBImg" src="" style="width:100%;max-height:250px;object-fit:contain;border-radius:8px">
+                <div style="margin-top:10px">
+                  <div style="font-size:12px;color:rgba(240,244,255,0.5)">Quality Score</div>
+                  <div style="font-size:28px;font-weight:800;color:#06d6e3" id="scoreB">—</div>
+                  <div style="font-size:11px;color:rgba(240,244,255,0.35)" id="labelB"></div>
+                </div>
+                <button onclick="downloadAB('b')" class="btn-outline-glow" style="width:100%;padding:8px;font-size:12px;margin-top:10px;border-color:#06d6e3;color:#06d6e3">
+                  <i class="bi bi-download me-1"></i>Download B
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Winner -->
+        <div id="winnerBanner" style="margin-top:16px;border-radius:12px;padding:14px;text-align:center;font-size:14px;font-weight:600;display:none"></div>
+      </div>
+
+      <div id="abEmpty" style="text-align:center;padding:60px;color:rgba(240,244,255,0.25)">
+        <div style="font-size:48px;margin-bottom:12px">⚖️</div>
+        <div style="font-size:14px">Upload an image to compare versions</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let versionAFile = null, versionBFile = null;
+
+  const abInput = document.getElementById('abInput');
+  abInput.addEventListener('change', e => {
+    if (e.target.files[0]) {
+      const fr = new FileReader();
+      fr.onload = ev => {
+        document.getElementById('abPreview').src = ev.target.result;
+        document.getElementById('abPreview').style.display = 'block';
+        document.getElementById('abDropContent').style.display = 'none';
+      };
+      fr.readAsDataURL(e.target.files[0]);
+    }
+  });
+
+  async function runAB() {
+    const file = abInput.files[0];
+    if (!file) { alert('Please upload an image'); return; }
+
+    const btn = document.getElementById('abBtn');
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Generating...';
+    btn.disabled = true;
+
+    const fd = new FormData();
+    fd.append('image', file);
+
+    try {
+      const resp = await fetch('/ab-compare/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showABResults(data);
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      btn.innerHTML = '<i class="bi bi-play-fill me-2"></i>Generate A/B Versions';
+      btn.disabled = false;
+    }
+  }
+
+  function showABResults(data) {
+    versionAFile = data.version_a_url.split('/').pop();
+    versionBFile = data.version_b_url.split('/').pop();
+
+    document.getElementById('abEmpty').style.display = 'none';
+    document.getElementById('abResults').style.display = 'block';
+
+    document.getElementById('versionAImg').src = data.version_a_url + '?t=' + Date.now();
+    document.getElementById('versionBImg').src = data.version_b_url + '?t=' + Date.now();
+
+    const qa = data.quality_a, qb = data.quality_b;
+    document.getElementById('scoreA').textContent = qa.total;
+    document.getElementById('labelA').textContent = qa.label[0];
+    document.getElementById('scoreB').textContent = qb.total;
+    document.getElementById('labelB').textContent = qb.label[0];
+
+    // Winner banner
+    const winner = document.getElementById('winnerBanner');
+    winner.style.display = 'block';
+    if (qa.total > qb.total) {
+      winner.style.background = 'rgba(79,142,255,0.1)';
+      winner.style.border = '1px solid rgba(79,142,255,0.3)';
+      winner.innerHTML = '🏆 <span style="color:#4f8eff">Version A (High Contrast)</span> wins with score ' + qa.total + '/100';
+    } else if (qb.total > qa.total) {
+      winner.style.background = 'rgba(6,214,227,0.1)';
+      winner.style.border = '1px solid rgba(6,214,227,0.3)';
+      winner.innerHTML = '🏆 <span style="color:#06d6e3">Version B (Soft)</span> wins with score ' + qb.total + '/100';
+    } else {
+      winner.innerHTML = '🤝 Both versions have equal quality scores!';
+    }
+  }
+
+  function downloadAB(version) {
+    const filename = version === 'a' ? versionAFile : versionBFile;
+    if (filename) window.location.href = `/download/${filename}/?format=PNG`;
+  }
+
+  function getCookie(name) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+      c = c.trim();
+      if (c.startsWith(name + '=')) v = decodeURIComponent(c.slice(name.length + 1));
+    });
+    return v;
+  }
+</script>
+{% endblock %}
